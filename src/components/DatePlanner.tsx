@@ -26,6 +26,8 @@ const DatePlanner = () => {
             link.href = canvas.toDataURL('image/png');
             link.click();
 
+            localStorage.setItem('proposal_accepted', 'true');
+
             setTimeout(() => {
                 navigate('/countdown');
             }, 1500);

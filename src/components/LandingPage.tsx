@@ -1,10 +1,19 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ValentineProposal from './ValentineProposal';
 
 const LandingPage = () => {
     const [showProposal, setShowProposal] = useState(false);
     const proposalRef = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const accepted = localStorage.getItem('proposal_accepted');
+        if (accepted === 'true') {
+            navigate('/countdown');
+        }
+    }, [navigate]);
 
     const handleReveal = () => {
         setShowProposal(true);

@@ -144,7 +144,7 @@ const CountdownPage = () => {
                                     [Photo 2]
                                 </div>
                                 <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 md:col-span-3 flex items-center justify-center text-white/30 font-freckle p-8 hover:bg-white/20 transition-colors">
-                                    [Funny Photo of Us]
+                                    [Funny Photo of Us ]
                                 </div>
                             </div>
                         </section>

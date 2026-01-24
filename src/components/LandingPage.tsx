@@ -15,7 +15,7 @@ const LandingPage = () => {
             const targetPosition = element.getBoundingClientRect().top + window.scrollY;
             const startPosition = window.scrollY;
             const distance = targetPosition - startPosition;
-            const duration = 2000; // 2 seconds
+            const duration = 2000;
             let start: number | null = null;
 
             function step(timestamp: number) {
@@ -23,7 +23,6 @@ const LandingPage = () => {
                 const progress = timestamp - start;
                 const percentage = Math.min(progress / duration, 1);
 
-                // Ease In Out Cubic
                 const ease = percentage < 0.5
                     ? 4 * percentage * percentage * percentage
                     : 1 - Math.pow(-2 * percentage + 2, 3) / 2;

@@ -54,7 +54,7 @@ const DatePlanner = () => {
                     }}
                 >
                     <div className="flex flex-col items-center mb-8 border-b-2 border-dashed border-gray-300 pb-4">
-                        <h2 className="text-3xl font-bold tracking-wider uppercase">PLAN-A-DATE</h2>
+                        <h2 className="text-3xl font-bold tracking-wider uppercase">RECEIPT</h2>
                         <p className="text-sm text-gray-500 mt-1">Order #20260214</p>
                         <p className="text-xs text-gray-400">THANK YOU FOR SAYING YES</p>
                     </div>

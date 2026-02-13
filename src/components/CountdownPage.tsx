@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 
 const CountdownPage = () => {
@@ -23,6 +23,12 @@ const CountdownPage = () => {
     const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
     const [isTimeUp, setIsTimeUp] = useState(timeLeft.total < 0);
 
+    // Audio State
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+
     useEffect(() => {
         const timer = setInterval(() => {
             const newTimeLeft = calculateTimeLeft();
@@ -36,6 +42,67 @@ const CountdownPage = () => {
 
         return () => clearInterval(timer);
     }, []);
+
+    // Audio Effect
+    useEffect(() => {
+        if (audioRef.current) return; // Prevent recreation
+
+        audioRef.current = new Audio('/her.mp3');
+        audioRef.current.loop = true;
+        audioRef.current.volume = 0.005; // Lower volume for background music
+
+        const handleTimeUpdate = () => {
+            if (audioRef.current) {
+                setCurrentTime(audioRef.current.currentTime);
+            }
+        };
+
+        const handleLoadedMetadata = () => {
+            if (audioRef.current) {
+                setDuration(audioRef.current.duration);
+            }
+        };
+
+        audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
+        audioRef.current.addEventListener('loadedmetadata', handleLoadedMetadata);
+
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
+                audioRef.current.removeEventListener('loadedmetadata', handleLoadedMetadata);
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+        };
+    }, []);
+
+    // Auto-play when time is up
+    useEffect(() => {
+        if (isTimeUp && audioRef.current && !isPlaying) {
+            audioRef.current.play().catch(e => console.error("Auto-play failed:", e));
+            setIsPlaying(true);
+        }
+    }, [isTimeUp]);
+
+    const togglePlay = () => {
+        if (audioRef.current) {
+            if (isPlaying) {
+                audioRef.current.pause();
+            } else {
+                audioRef.current.play().catch(e => console.error("Audio playback failed:", e));
+            }
+            setIsPlaying(!isPlaying);
+        }
+    };
+
+    const formatTime = (time: number) => {
+        if (isNaN(time)) return "0:00";
+        const minutes = Math.floor(time / 60);
+        const seconds = Math.floor(time % 60);
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    };
+
+
 
     return (
         <div className="relative w-full min-h-screen text-white bg-black overflow-y-auto overflow-x-hidden flex flex-col items-center p-4">
@@ -89,19 +156,13 @@ const CountdownPage = () => {
                         <section className="w-full max-w-2xl bg-white/90 text-black p-8 md:p-12 rounded-lg shadow-2xl rotate-1 transform hover:rotate-0 transition-transform duration-500">
                             <h2 className="text-3xl font-freckle text-pink-600 mb-6 text-center">My Dearest Valentine</h2>
                             <div className="font-serif leading-relaxed text-lg space-y-4 text-gray-800">
-                                <p>My Dearest,</p>
                                 <p>
-                                    As the countdown finally reaches zero, I want to take a moment to tell you how much you mean to me.
-                                    Looking forward to this day has been the highlight of my year.
+                                    Happy Valentine's Day! Kung nababasa mo 'to ngayon, ibig sabihin non wala na ako. Nasa sulok na ako, cringing in embarrassment every time na binabasa mo mga essay ko. Anyways, sinusulat ko to ngayong 11:30 PM ng February 13, 2026. Sana maclutch. Sinulat ko lang talaga ngayon kase I want to write what I feel in the moment. Aaaa, sobrang saya ko ngayon. To think na may makakasama ako magcelebrate ng Valentine's. First time in 20 years. In case na hindi mo alam, you are my first. My first (date?), first photobooth, first movie (date?), first ka-call, first duo. So fucking happy right now. Can't explain why but I feel giddy. Gusto ko na lang tumalon-talon.
                                 </p>
                                 <p>
-                                    You bring so much color and joy into my world, just like the beautiful background of this page.
-                                    I can't wait to create more memories with you today and forever.
+                                    Sinusulat ko habang naririnig ko boses mo aaaa I feel so blessed. I really like hearing your voice, when you giggle, when you sound eepy. Nakakakalma. Ayun lang muna for now, paubos na ang oras. I love youu.
                                 </p>
-                                <p>
-                                    Happy Valentine's Day!
-                                </p>
-                                <p className="text-right mt-8 font-bold">- Always Yours</p>
+                                <p className="text-right mt-8 font-bold">- Kirit</p>
                             </div>
                         </section>
 
@@ -111,47 +172,53 @@ const CountdownPage = () => {
                                     <span className="text-2xl">🎵</span>
                                 </div>
                                 <div className="flex-1">
-                                    <h3 className="text-xl font-bold text-white">Our Song</h3>
-                                    <p className="text-pink-200">The Perfect Artist</p>
+                                    <h3 className="text-xl font-bold text-white">Her</h3>
+                                    <p className="text-pink-200">JVKE</p>
                                 </div>
                             </div>
 
-                            <div className="w-full bg-white/10 h-1.5 rounded-full mb-2 overflow-hidden">
-                                <div className="bg-pink-500 w-1/3 h-full rounded-full"></div>
+                            <div className="w-full bg-white/10 h-1.5 rounded-full mb-2 overflow-hidden cursor-pointer" onClick={(e) => {
+                                if (audioRef.current && duration) {
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    const x = e.clientX - rect.left;
+                                    const percentage = x / rect.width;
+                                    audioRef.current.currentTime = percentage * duration;
+                                    setCurrentTime(percentage * duration);
+                                }
+                            }}>
+                                <div
+                                    className="bg-pink-500 h-full rounded-full transition-all duration-100 ease-linear"
+                                    style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
+                                ></div>
                             </div>
                             <div className="flex justify-between text-xs text-white/50 mb-6">
-                                <span>1:23</span>
-                                <span>3:45</span>
+                                <span>{formatTime(currentTime)}</span>
+                                <span>{formatTime(duration)}</span>
                             </div>
 
                             <div className="flex justify-center items-center gap-8 text-2xl">
-                                <button className="text-white/70 hover:text-white transition-colors">⏮️</button>
-                                <button className="w-12 h-12 flex items-center justify-center bg-white text-black rounded-full shadow hover:scale-105 active:scale-95 transition-all">▶️</button>
-                                <button className="text-white/70 hover:text-white transition-colors">⏭️</button>
+                                <button className="text-white/70 hover:text-white transition-colors" onClick={() => {
+                                    if (audioRef.current) audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 10);
+                                }}>⏮️</button>
+                                <button
+                                    className="w-12 h-12 flex items-center justify-center bg-white text-black rounded-full shadow hover:scale-105 active:scale-95 transition-all"
+                                    onClick={togglePlay}
+                                >
+                                    {isPlaying ? '⏸️' : '▶️'}
+                                </button>
+                                <button className="text-white/70 hover:text-white transition-colors" onClick={() => {
+                                    if (audioRef.current) audioRef.current.currentTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + 10);
+                                }}>⏭️</button>
                             </div>
                         </section>
 
-                        <section className="w-full max-w-4xl text-center">
-                            <h2 className="text-4xl font-freckle text-white mb-8 drop-shadow-lg">Us Through Time</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-[200px]">
-                                <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 md:col-span-2 md:row-span-2 flex items-center justify-center text-white/30 text-xl font-freckle hover:bg-white/20 transition-colors">
-                                    [Big Photo of Us]
-                                </div>
-                                <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex items-center justify-center text-white/30 font-freckle hover:bg-white/20 transition-colors">
-                                    [Photo 1]
-                                </div>
-                                <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex items-center justify-center text-white/30 font-freckle hover:bg-white/20 transition-colors">
-                                    [Photo 2]
-                                </div>
-                                <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 md:col-span-3 flex items-center justify-center text-white/30 font-freckle p-8 hover:bg-white/20 transition-colors">
-                                    [Funny Photo of Us ]
-                                </div>
-                            </div>
-                        </section>
+
 
                     </motion.div>
                 )}
             </div>
+
+
         </div>
     );
 };
